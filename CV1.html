@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Interactivo | Jessica Raquel Martínez Brizuela</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: Se ha diseñado una SPA con un panel de navegación lateral fijo y un área de contenido principal dinámica. Esta arquitectura tipo "dashboard" permite al usuario explorar el perfil de forma no lineal, accediendo directamente a las secciones de interés (Perfil, Competencias, Trayectoria, Academia). Se eligió esta estructura para mejorar la usabilidad y la digestión de la información en comparación con un documento estático, permitiendo una experiencia de usuario más limpia y enfocada en cada sección. Las transiciones suaves entre secciones guían al usuario y crean una experiencia fluida. -->
+    <!-- Visualization & Content Choices: 
+        1. Habilidades Técnicas -> Goal: Informar/Comparar -> Viz: Gráfico de barras horizontales (Chart.js/Canvas) -> Interaction: Comparación visual de niveles de competencia autoevaluados -> Justification: Transforma una lista de texto en una visualización de datos atractiva y fácil de interpretar, destacando las fortalezas clave de un vistazo.
+        2. Experiencia Profesional -> Goal: Mostrar cambio/progreso -> Viz: Línea de tiempo vertical (HTML/CSS) -> Interaction: Clic en cada hito para expandir y ver los detalles y logros -> Justification: Organiza la trayectoria cronológicamente de una manera visualmente intuitiva, manteniendo la interfaz limpia al ocultar los detalles hasta que el usuario los solicite.
+        3. Competencias Interpersonales -> Goal: Organizar -> Viz: Tarjetas de contenido (HTML/CSS) -> Interaction: Estática -> Justification: Agrupa las habilidades blandas en bloques visuales claros y legibles.
+        4. Formación y Voluntariado -> Goal: Organizar -> Viz: Tarjetas de contenido (HTML/CSS) -> Interaction: Estática -> Justification: Separa y presenta la información en bloques modulares y digeribles.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #3D352E;
+        }
+        .active-nav {
+            background-color: #EADDCD;
+            color: #3D352E;
+            font-weight: 700;
+        }
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .content-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #D3C5B5;
+        }
+        .timeline-item-dot {
+            position: absolute;
+            left: -1px;
+            top: 5px;
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            background-color: #9A8C78;
+            border: 4px solid #FDFBF8;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        /* OPTIMIZACIÓN MÓVIL: Ajuste el ancho del sidebar para móvil */
+        @media (max-width: 767px) {
+            #sidebar {
+                width: 75%; /* Ocupa más ancho en móvil para mejor toque */
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="relative min-h-screen md:flex">
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden flex justify-between items-center p-4 bg-white shadow-md">
+            <h1 class="text-xl font-bold text-[#3D352E]">J.R. Martínez Brizuela</h1>
+            <button id="mobile-menu-button" class="text-[#3D352E] focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="bg-[#F4EFE7] text-[#5C5248] w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out z-20 shadow-lg">
+            <div class="px-4 text-center">
+                <h2 class="text-2xl font-bold text-[#3D352E]">Jessica Raquel Martínez Brizuela</h2>
+                <p class="text-sm mt-1">Economista | Especialista en M&E</p>
+            </div>
+            <nav id="nav-menu">
+                <a href="#perfil" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-[#EADDCD] hover:text-[#3D352E] active-nav">
+                    Perfil Profesional
+                </a>
+                <a href="#competencias" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-[#EADDCD] hover:text-[#3D352E]">
+                    Competencias
+                </a>
+                <a href="#trayectoria" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-[#EADDCD] hover:text-[#3D352E]">
+                    Trayectoria Profesional
+                </a>
+                <a href="#academia" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-[#EADDCD] hover:text-[#3D352E]">
+                    Formación y Academia
+                </a>
+                 <a href="#contacto" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-[#EADDCD] hover:text-[#3D352E]">
+                    Contacto
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 p-6 md:p-10">
+            <!-- Perfil Profesional Section -->
+            <section id="perfil" class="content-section active">
+                <h1 class="text-4xl font-bold text-[#3D352E] mb-6 border-b-2 border-[#D3C5B5] pb-2">Perfil Profesional</h1>
+                <div class="bg-white p-8 rounded-xl shadow-sm">
+                    <p class="text-lg leading-relaxed text-[#5C5248] text-justify">
+                        Economista y Especialista en Monitoreo, Evaluación y Gestión de Proyectos con más de 9 años de experiencia en el sector público y privado. Experiencia comprobada en la <strong class="text-[#9A8C78]">formulación, seguimiento y evaluación de indicadores de impacto</strong> para programas sociales y educativos, aplicando metodologías de Presupuesto Basado en Resultados y análisis cuantitativo. Mi enfoque se centra en <strong class="text-[#9A8C78]">traducir data compleja en insumos estratégicos</strong> para la toma de decisiones y la mejora continua de la calidad y la gestión financiera de iniciativas.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Competencias Section -->
+            <section id="competencias" class="content-section">
+                 <h1 class="text-4xl font-bold text-[#3D352E] mb-6 border-b-2 border-[#D3C5B5] pb-2">Competencias Clave</h1>
+                 <p class="mb-8 text-lg text-[#5C5248] text-justify">Esta sección destaca mis capacidades técnicas, validadas a través de mi experiencia, y las habilidades interpersonales que aplico para liderar y colaborar eficazmente en entornos complejos.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h2 class="text-2xl font-bold mb-4 text-[#9A8C78]">Habilidades Técnicas</h2>
+                        <div class="chart-container">
+                            <canvas id="skillsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h2 class="text-2xl font-bold mb-4 text-[#9A8C78]">Habilidades Interpersonales</h2>
+                        <div class="space-y-4">
+                            <div class="bg-[#F4EFE7] p-4 rounded-lg"><p>Liderazgo de Equipos Multidisciplinarios</p></div>
+                            <div class="bg-[#F4EFE7] p-4 rounded-lg"><p>Comunicación Estratégica (Oral y Escrita)</p></div>
+                            <div class="bg-[#F4EFE7] p-4 rounded-lg"><p>Pensamiento Analítico y Crítico</p></div>
+                            <div class="bg-[#F4EFE7] p-4 rounded-lg"><p>Adaptabilidad y Resolución de Problemas</p></div>
+                            <div class="bg-[#F4EFE7] p-4 rounded-lg"><p>Gestión del Tiempo y Priorización</p></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Trayectoria Section -->
+            <section id="trayectoria" class="content-section">
+                <h1 class="text-4xl font-bold text-[#3D352E] mb-6 border-b-2 border-[#D3C5B5] pb-2">Trayectoria Profesional</h1>
+                <p class="mb-10 text-lg text-[#5C5248] text-justify">Mi carrera se ha desarrollado en la intersección del análisis económico, la gestión de proyectos y la academia. Cada rol me ha permitido fortalecer mi capacidad para evaluar programas y generar impacto medible. Haz clic en cada experiencia para ver los detalles.</p>
+                
+                <div class="relative timeline ml-4">
+                    <!-- Timeline Item -->
+                    <div class="mb-8 pl-10 timeline-item">
+                        <div class="timeline-item-dot"></div>
+                        <p class="font-medium text-sm text-[#9A8C78]">Jun 2022 – Abr 2025</p>
+                        <h3 class="font-bold text-xl cursor-pointer" onclick="toggleDetails(this)">Apoyo Técnico en Programas de Postgrado y Gestión Administrativa</h3>
+                        <p class="font-semibold text-md text-[#5C5248]">Universidad Nacional de Asunción</p>
+                        <div class="details hidden mt-2 text-gray-600 space-y-2 text-justify">
+                            <p>• <strong title="Implementation">Implementé</strong> y <strong title="Administration">administré</strong> el flujo administrativo y financiero de tres programas de Postgrado, garantizando la trazabilidad y el cumplimiento del 100% de los requisitos de gestión interna.</p>
+                            <p>• <strong title="Monitoring">Monitoreé</strong> el progreso de más de <strong title="200 Students">200 estudiantes</strong>, desarrollando herramientas de seguimiento de indicadores académicos y logísticos.</p>
+                            <p>• <strong title="Coordination">Coordiné</strong> la elaboración de informes técnicos y financieros, facilitando la toma de decisiones sobre la continuidad y mejora de la oferta académica.</p>
+                        </div>
+                    </div>
+                     <!-- Timeline Item -->
+                    <div class="mb-8 pl-10 timeline-item">
+                        <div class="timeline-item-dot"></div>
+                        <p class="font-medium text-sm text-[#9A8C78]">May 2021 – May 2022</p>
+                        <h3 class="font-bold text-xl cursor-pointer" onclick="toggleDetails(this)">Analista Económico (Técnico Sénior)</h3>
+                        <p class="font-semibold text-md text-[#5C5248]">Ministerio de Hacienda - Subsecretaría de Estado de Economía</p>
+                        <div class="details hidden mt-2 text-gray-600 space-y-2 text-justify">
+                           <p>• <strong title="Analysis">Analicé</strong> y <strong title="Synthesis">sinteticé</strong> datos macroeconómicos para la elaboración de informes estratégicos, contribuyendo a la formulación de políticas fiscales a nivel nacional.</p>
+                           <p>• <strong title="Design">Diseñé</strong> modelos de proyección económica para la estimación del Presupuesto General de la Nación.</p>
+                           <p>• <strong title="Collaboration">Colaboré</strong> en la evaluación de programas y políticas públicas con análisis de costos-beneficios.</p>
+                        </div>
+                    </div>
+                    <!-- Timeline Item -->
+                    <div class="mb-8 pl-10 timeline-item">
+                        <div class="timeline-item-dot"></div>
+                        <p class="font-medium text-sm text-[#9A8C78]">Ene 2023 – Jun 2023</p>
+                        <h3 class="font-bold text-xl cursor-pointer" onclick="toggleDetails(this)">Sénior Associate</h3>
+                        <p class="font-semibold text-md text-[#5C5248]">Price WaterhouseCoopers (PwC) - Economic Club Economics and Policy</p>
+                        <div class="details hidden mt-2 text-gray-600 space-y-2 text-justify">
+                           <p>• <strong title="Report Elaboration">Elaboré</strong> análisis de riesgo y reportes de mercado para clientes del sector privado, utilizando herramientas de modelado econométrico.</p>
+                           <p>• <strong title="Contribution">Contribuí</strong> a proyectos de consultoría económica y regulatoria.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Academia Section -->
+            <section id="academia" class="content-section">
+                <h1 class="text-4xl font-bold text-[#3D352E] mb-6 border-b-2 border-[#D3C5B5] pb-2">Formación y Academia</h1>
+                <p class="mb-10 text-lg text-[#5C5248] text-justify">Mi base académica como Economista se complementa con una especialización continua en la evaluación de proyectos y la calidad educativa, lo que me proporciona un marco robusto para el análisis de impacto.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-4 text-[#9A8C78]">Estudios de Postgrado y Grado</h2>
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                <h4 class="font-bold">Maestría en Formulación, Evaluación y Gestión de Proyectos de Inversión</h4>
+                                <p class="text-sm">Universidad Nacional de Asunción</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                <h4 class="font-bold">Especialización en Evaluación de la Calidad de Institución de Educación Superior</h4>
+                                <p class="text-sm">Instituto Nacional de Educación Superior</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                <h4 class="font-bold">Diplomados Relevantes en M&E</h4>
+                                <p class="text-sm">Evaluación de Políticas Públicas y Presupuesto Basado en Resultados (SHCP México)</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                <h4 class="font-bold">Economista</h4>
+                                <p class="text-sm">Universidad Nacional de Asunción</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold mb-4 text-[#9A8C78]">Investigación Destacada</h2>
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                <h4 class="font-bold">Reducción de la incidencia del embarazo en niñas y adolescentes...</h4>
+                                <p class="text-sm italic">Trabajo Final de Postgrado en Formulación y Evaluación de Proyectos Sociales (2021-2025).</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                <h4 class="font-bold">Incidencia de la labor del Aula hospitalaria en la inclusión educativa y social...</h4>
+                                <p class="text-sm italic">Publicado en Revista Kera Yvoty y galardonado con el Primer Puesto en el Foro de Investigación FACSO (2019).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+             <!-- Contacto Section -->
+            <section id="contacto" class="content-section">
+                <h1 class="text-4xl font-bold text-[#3D352E] mb-6 border-b-2 border-[#D3C5B5] pb-2">Contacto</h1>
+                 <div class="bg-white p-8 rounded-xl shadow-sm text-center">
+                    <p class="text-lg text-[#5C5248] mb-2">Estoy abierta a nuevas oportunidades y colaboraciones.</p>
+                    <p class="text-xl font-semibold text-[#3D352E]">jessimar012@gmail.com</p>
+                    <p class="text-xl font-semibold text-[#3D352E] mt-1">(+595) 983 119 315</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const sidebar = document.getElementById('sidebar');
+
+            let skillsChart = null;
+
+            function showSection(hash) {
+                const targetId = hash.substring(1);
+                
+                sections.forEach(section => {
+                    if (section.id === targetId) {
+                        section.classList.add('active');
+                    } else {
+                        section.classList.remove('active');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === hash) {
+                        link.classList.add('active-nav');
+                    } else {
+                        link.classList.remove('active-nav');
+                    }
+                });
+
+                if (targetId === 'competencias' && !skillsChart) {
+                    renderSkillsChart();
+                }
+                
+                // Cierra el sidebar en móvil al seleccionar una sección
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            }
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    history.pushState(null, null, this.getAttribute('href'));
+                    showSection(this.getAttribute('href'));
+                });
+            });
+
+            mobileMenuButton.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+            
+            window.addEventListener('popstate', () => {
+                showSection(window.location.hash || '#perfil');
+            });
+            
+            showSection(window.location.hash || '#perfil');
+
+            function renderSkillsChart() {
+                const ctx = document.getElementById('skillsChart').getContext('2d');
+                skillsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Monitoreo y Evaluación (M&E)', 'Evaluación de Impacto', 'Gestión de Proyectos', 'Presupuesto (PBR)', 'Análisis de Datos (Excel)', 'Inglés Técnico'],
+                        datasets: [{
+                            label: 'Nivel de Competencia',
+                            data: [95, 90, 85, 88, 92, 80],
+                            backgroundColor: '#9A8C78',
+                            borderColor: '#847867',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: {
+                                    color: '#F4EFE7'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        function toggleDetails(element) {
+            const detailsDiv = element.nextElementSibling.nextElementSibling;
+            detailsDiv.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
